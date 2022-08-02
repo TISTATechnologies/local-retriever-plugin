@@ -13,7 +13,7 @@ version = '1.0-SNAPSHOT'
 description = 'TODO Plugin'
 
 jenkinsPlugin {
-    coreVersion = "2.249"                                               // Version of Jenkins core this plugin depends on.
+    coreVersion = "2.346.2"                                               // Version of Jenkins core this plugin depends on.
     displayName = "Pipeline: Global Local Libs"                // Human-readable name of plugin.
     url = "http://wiki.jenkins-ci.org/display/JENKINS/SomePluginPage"   // URL for plugin on Jenkins wiki or elsewhere.
     gitHubUrl = "https://github.com/jenkinsci/some-plugin"              // Plugin URL on GitHub. Optional.
@@ -35,14 +35,20 @@ repositories {
     maven {
         url = uri('https://repo.jenkins-ci.org/public/')
     }
-
+    maven {
+        url = uri('https://repo.jenkins-ci.org/releases/')
+    }
     maven {
         url = uri('https://repo.maven.apache.org/maven2/')
     }
 }
 
 dependencies {
-    testImplementation 'org.jenkins-ci.main:jenkins-war:2.249'
+
+    // Using BOM to get recommended libs for this version of Jenkins 
+    implementation enforcedPlatform('org.jenkins-ci.main:jenkins-bom:2.346.2') 
+
+    testImplementation 'org.jenkins-ci.main:jenkins-war:2.346.2'
     testImplementation 'org.jenkins-ci.main:jenkins-test-harness:1784.v83a_b_3ce99392'
     testImplementation 'org.jenkins-ci:test-annotations:1.4'
     testImplementation 'org.jenkins-ci.main:jenkins-war:2.332.4'
@@ -50,18 +56,19 @@ dependencies {
     testImplementation 'org.jenkins-ci:test-annotations:1.4'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'junit:junit:4.13.2'
-    compileOnly 'org.jenkins-ci.main:jenkins-core:2.249'
+    compileOnly 'org.jenkins-ci.main:jenkins-core:2.346.2'
     compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
     compileOnly 'net.jcip:jcip-annotations:1.0'
     compileOnly 'org.codehaus.mojo:animal-sniffer-annotations:1.21'
     compileOnly 'commons-logging:commons-logging:1.2'
-    compileOnly 'org.jenkins-ci.main:jenkins-core:2.332.4'
     compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
     compileOnly 'net.jcip:jcip-annotations:1.0'
     compileOnly 'org.codehaus.mojo:animal-sniffer-annotations:1.21'
     compileOnly 'commons-logging:commons-logging:1.2'
+
     // Jenkins plugins deps
-    api 'io.jenkins.plugins:pipeline-groovy-lib:591.v3a_7f422b_d058'
+    implementation 'org.jenkins-ci:symbol-annotation'
+    api 'io.jenkins.plugins:pipeline-groovy-lib:598.vcd66b_a_336510'
 }
 
 

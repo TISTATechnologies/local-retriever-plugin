@@ -8,20 +8,23 @@ import hudson.model.TaskListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import jenkins.model.Jenkins;
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.workflow.libs.LibraryRetriever;
 import org.jenkinsci.plugins.workflow.libs.LibraryRetrieverDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class LocalRetriever extends LibraryRetriever {
   private final Node jenkins;
   private final String localLibPath;
 
-  LocalRetriever(String localLib, Node jenkins) {
-    this.jenkins = jenkins;
-    this.localLibPath = System.getenv("JENKINS_HOME") + localLib;
+  @DataBoundConstructor
+  public LocalRetriever() {
+    String localLib = "jenkins-scripts";
+    this.jenkins = Jenkins.get();
+    this.localLibPath = System.getenv("JENKINS_HOME") + "/" + localLib;
   }
 
   @Override
@@ -37,8 +40,9 @@ public class LocalRetriever extends LibraryRetriever {
 
     listener.getLogger().println(
         String.format(
-          "Copy local dir: %s into target dir: %s", this.localLibPath, target.getRemote()));
-    this.copyDirectory(this.localLibPath, target.getRemote());
+          "Copy local libs from: %s into target dir: %s", this.localLibPath, target.getRemote()));
+
+    this.copyDirectories(this.localLibPath, target.getRemote(), listener);
 
   }
 
@@ -53,21 +57,32 @@ public class LocalRetriever extends LibraryRetriever {
   public static class DescriptorImpl extends LibraryRetrieverDescriptor {
     @Override
     public String getDisplayName() {
-      return "Nexus";
+      return "local";
     }
   }
 
-  private void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation)
+  private void copyDirectories(String sourceDir, String destDir, TaskListener listener)
       throws IOException {
-    Files.walk(Paths.get(sourceDirectoryLocation))
-        .forEach(source -> {
-          Path destination = Paths.get(destinationDirectoryLocation, source.toString()
-                .substring(sourceDirectoryLocation.length()));
-          try {
-            Files.copy(source, destination);
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        });
+
+    if (Files.isDirectory(Paths.get(sourceDir + "/src"))) {
+      File src = new File(sourceDir + "/src");
+
+      listener.getLogger().println(
+          String.format("Copying %s", src));
+
+      FileUtils.copyDirectory(src, new File(destDir + "/src"));
+
+    } else if (Files.isDirectory(Paths.get(destDir + "/vars"))) {
+      File vars = new File(sourceDir + "/vars");
+
+      listener.getLogger().println(
+          String.format("Copying %s", vars));
+
+      FileUtils.copyDirectory(vars, new File(destDir + "/vars"));
+
+    } else {
+      throw new IOException("no src/ or vars/ dir present in local lib");
+
+    }
   }
 }
